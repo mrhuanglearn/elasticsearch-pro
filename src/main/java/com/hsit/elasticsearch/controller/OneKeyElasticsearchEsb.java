@@ -57,6 +57,9 @@ public class OneKeyElasticsearchEsb {
     @ResponseBody
     public Object getSessionValue(HttpServletRequest request) {
         HttpSession session = request.getSession(false);
+        if (session == null || session.getAttribute("requestCondition") == null) {
+            return 0;
+        }
         return session.getAttribute("requestCondition");
     }
 
@@ -66,6 +69,7 @@ public class OneKeyElasticsearchEsb {
     public Object indexSearch(@RequestBody ELKRequest elkRequest, HttpServletRequest request) {
 
         HttpSession session = request.getSession();
+        session.setAttribute("requestCondition", elkRequest);
         QueryOperation operation = QueryOperation.builder();
 
         //搜索条件
@@ -104,7 +108,7 @@ public class OneKeyElasticsearchEsb {
     public Object firstSearch(@RequestBody ELKBodyRequest requests, HttpServletRequest request) {
 
         HttpSession session = request.getSession();
-
+        session.setAttribute("requestCondition", requests);
         QueryOperation operation = QueryOperation.builder();
         //搜索条件
         BoolQueryBuilder matchQuery = operation.oneKeyMultipleConditionBool(requests);

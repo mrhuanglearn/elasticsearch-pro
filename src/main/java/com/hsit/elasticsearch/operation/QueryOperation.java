@@ -1,22 +1,20 @@
 package com.hsit.elasticsearch.operation;
 
 
+import com.hsit.elasticsearch.common.ColCovertMultipleCols;
 import com.hsit.elasticsearch.common.ELKTools;
 import com.hsit.elasticsearch.common.FieldHighlightBuilder;
 import com.hsit.elasticsearch.enums.AnalysisType;
 import com.hsit.elasticsearch.enums.Exact;
 import com.hsit.elasticsearch.enums.LogicOperation;
-import com.hsit.elasticsearch.common.ColCovertMultipleCols;
 import com.hsit.elasticsearch.request.ELKBodyRequest;
 import com.hsit.elasticsearch.request.ELKRequest;
 import com.hsit.elasticsearch.request.InputCondition;
-import com.sun.istack.internal.NotNull;
 import org.elasticsearch.common.Strings;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
-import org.springframework.lang.NonNull;
 
 import java.util.*;
 import java.util.regex.Pattern;
@@ -496,9 +494,8 @@ public class QueryOperation {
      *
      * @return
      */
-    public HighlightBuilder oneKeySearchBoolHighlight(@NotNull String... fields) {
+    public HighlightBuilder oneKeySearchBoolHighlight(String... fields) {
         return FieldHighlightBuilder.builder().addAnalysisType(AnalysisType.HANLP, AnalysisType.ACCURATE, AnalysisType.SIGNAL).getHighlightBuilder(fieldsAll);
-
     }
 
     /**

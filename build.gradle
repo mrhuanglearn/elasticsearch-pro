@@ -1,0 +1,76 @@
+plugins {
+    id 'org.springframework.boot' version '2.3.4.RELEASE'
+    id 'io.spring.dependency-management' version '1.0.10.RELEASE'
+    id 'java'
+//    id 'idea'
+}
+apply from: 'version.gradle'
+
+
+group = 'com.hsit.elasticsearch'
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = '1.8'
+targetCompatibility = '1.8'
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+    maven{ url 'http://maven.aliyun.com/nexus/content/groups/public/'}
+}
+
+
+dependencies {
+    implementation "org.springframework.boot:spring-boot-starter"
+    compile "org.springframework.boot:spring-boot-starter-web"
+    compile "org.apache.commons:commons-lang3:${COMMONS_LANG3_V}"
+    compile "cn.hutool:hutool-all:${HUTOOL_V}"
+    compile("org.elasticsearch.client:elasticsearch-rest-high-level-client:${ELK_CLIENT_V}") {
+        transitive = false
+        exclude group: "commons-logging", module: "commons-logging"
+    }
+
+    compile("org.elasticsearch.client:elasticsearch-rest-client:${ELK_CLIENT_V}") {
+        transitive = false
+        exclude group: "commons-logging", module: "commons-logging"
+    }
+
+    compile("org.elasticsearch.client:transport:${ELK_CLIENT_V}") {
+//        transitive = false
+        exclude group: "commons-logging", module: "commons-logging"
+        compile "org.elasticsearch:elasticsearch:${ELK_CLIENT_V}"
+        compile "org.elasticsearch:elasticsearch-cli:${ELK_CLIENT_V}"
+        compile "org.elasticsearch:elasticsearch-geo:${ELK_CLIENT_V}"
+        compile "org.elasticsearch:elasticsearch-secure-sm:${ELK_CLIENT_V}"
+        compile "org.elasticsearch:elasticsearch-x-content:${ELK_CLIENT_V}"
+        compile "org.elasticsearch.plugin:transport-netty4-client:${ELK_CLIENT_V}"
+        compile "org.elasticsearch:jna:5.5.0"
+    }
+
+    testImplementation('org.springframework.boot:spring-boot-starter-test') {
+        exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
+    }
+}
+
+
+//配置导出jar插件(springboot 内置打包jar插件) 终端运行命令: gradle bootJar 即可打出jar包
+bootJar {
+    version = ''
+}
+
+
+//在springboot种没见效果
+//jar {
+//    manifestContentCharset 'utf-8'
+//    metadataCharset 'utf-8'
+//    manifest {
+//        attributes 'Main-Class': 'com.hsit.elasticsearch.XungenElasticsearchApplication'
+//    }
+//    from {
+//        configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
+//    }
+//}
+
+
+test {
+    useJUnitPlatform()
+}

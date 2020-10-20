@@ -1,0 +1,5 @@
+ext {
+    COMMONS_LANG3_V='3.9'
+    ELK_CLIENT_V='7.8.1'
+    HUTOOL_V='5.4.3'
+}

@@ -1,6 +1,7 @@
 package com.hsit.elasticsearch.controller;
 
 
+import com.hsit.elasticsearch.client.RestHighLevelClientInstance;
 import com.hsit.elasticsearch.client.TransportClientInstance;
 import com.hsit.elasticsearch.common.DisplayCols;
 import com.hsit.elasticsearch.common.ELKTools;
@@ -9,7 +10,9 @@ import com.hsit.elasticsearch.operation.QueryOperation;
 import com.hsit.elasticsearch.operation.QueryOperationCommon;
 import com.hsit.elasticsearch.request.ELKBodyRequest;
 import com.hsit.elasticsearch.request.ELKRequest;
+import org.apache.http.HttpHost;
 import org.elasticsearch.action.search.SearchRequestBuilder;
+import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.index.query.BoolQueryBuilder;
@@ -23,6 +26,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
+import java.io.IOException;
 import java.net.UnknownHostException;
 import java.util.List;
 
@@ -33,10 +37,13 @@ public class OneKeyElasticsearchEsb {
 
     TransportClient client;
 
+    RestHighLevelClient restHighLevelClient;
+
     @Value("${es.ip}")
     public void setPersonDao(String ip) throws UnknownHostException { // 用于属性的setter方法上
         Settings.Builder settings = Settings.builder().put("cluster.name", "one-key-search").put("client.transport.sniff", false);//集群名称
         client = TransportClientInstance.commonBuild(ip, 9300, settings.build());
+        restHighLevelClient = RestHighLevelClientInstance.commonBuild(new HttpHost(ip, 9200, "http"));
         this.ip = ip;
     }
 
@@ -69,11 +76,11 @@ public class OneKeyElasticsearchEsb {
     public Object indexSearch(@RequestBody ELKRequest elkRequest, HttpServletRequest request) {
 
         HttpSession session = request.getSession();
-        session.setAttribute("requestCondition", elkRequest);
         QueryOperation operation = QueryOperation.builder();
 
         //搜索条件
         BoolQueryBuilder matchQuery = operation.oneKeySearchBool(elkRequest);
+        if (session.getAttribute("requestCondition") == null) session.setAttribute("requestCondition", elkRequest);
         session.setAttribute("condition", matchQuery);
 
         String[] xungenTypes = elkRequest.getXungenTypes();
@@ -108,10 +115,10 @@ public class OneKeyElasticsearchEsb {
     public Object firstSearch(@RequestBody ELKBodyRequest requests, HttpServletRequest request) {
 
         HttpSession session = request.getSession();
-        session.setAttribute("requestCondition", requests);
         QueryOperation operation = QueryOperation.builder();
         //搜索条件
         BoolQueryBuilder matchQuery = operation.oneKeyMultipleConditionBool(requests);
+        if (session.getAttribute("requestCondition") == null) session.setAttribute("requestCondition", requests);
         session.setAttribute("condition", matchQuery);
 
 
@@ -178,6 +185,30 @@ public class OneKeyElasticsearchEsb {
 
         return QueryOperationCommon.builder().responseResult(client, searchRequestBuilder, elkRequest.getPageNumber(), elkRequest.getPageSize(), displayCols, true);
 
+
+    }
+
+    @RequestMapping("/second/count/search")
+    @ResponseBody
+    public Object secondSearchCount(@RequestBody ELKRequest elkRequest, HttpServletRequest request) throws IOException {
+        HttpSession session = request.getSession(false);
+        if (session == null) return null;
+        BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
+
+//        先前条件
+        BoolQueryBuilder matchQuery = (BoolQueryBuilder) session.getAttribute("condition");
+//        第二个条件
+        QueryOperation operation = QueryOperation.builder();
+        BoolQueryBuilder secondBoolQueryBuilder = operation.oneKeySecondSearchCondition(elkRequest);
+        if (secondBoolQueryBuilder != null) boolQueryBuilder.must(secondBoolQueryBuilder);
+        boolQueryBuilder.must(matchQuery);
+
+        String[] xungenTypes = elkRequest.getXungenTypes();
+        if (ELKTools.isEmpty(xungenTypes)) {
+            return new ResponseDataEntity();
+        }
+
+        return QueryOperationCommon.builder().responseCountResult(restHighLevelClient, boolQueryBuilder, xungenTypes);
 
     }
 

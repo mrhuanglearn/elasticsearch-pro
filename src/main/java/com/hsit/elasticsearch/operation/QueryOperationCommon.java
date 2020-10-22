@@ -9,13 +9,19 @@ import com.hsit.elasticsearch.enums.AnalysisType;
 import com.hsit.elasticsearch.enums.LogicOperation;
 import org.elasticsearch.action.ActionFuture;
 import org.elasticsearch.action.search.*;
+import org.elasticsearch.client.RequestOptions;
+import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.client.core.CountRequest;
+import org.elasticsearch.client.core.CountResponse;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.text.Text;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
+import org.elasticsearch.search.builder.SearchSourceBuilder;
 
+import java.io.IOException;
 import java.util.*;
 
 public class QueryOperationCommon extends QueryOperationAbstract<QueryOperationCommon> {
@@ -405,6 +411,52 @@ public class QueryOperationCommon extends QueryOperationAbstract<QueryOperationC
 
 
         return responseDataEntity;
+    }
+
+
+    /**
+     * 统计索引返回文档数量(全部)
+     *
+     * @param indices 索引
+     * @return CountRequest
+     */
+    public CountRequest searchCount(String... indices) {
+        return searchCount(QueryBuilders.matchAllQuery(), indices);
+    }
+
+    /**
+     * 统计索引返回文档数量
+     *
+     * @param queryBuilder 条件
+     * @param indices      索引
+     * @return CountRequest
+     */
+    public CountRequest searchCount(QueryBuilder queryBuilder, String... indices) {
+        CountRequest countRequest = new CountRequest().indices(indices).preference("_local");
+        SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+        searchSourceBuilder.query(queryBuilder);
+        return countRequest.source(searchSourceBuilder);
+    }
+
+    /**
+     * 返回统计
+     *
+     * @param client transportClient 参数
+     */
+    public Map<String, CountResponse> responseCountResult(RestHighLevelClient client, QueryBuilder queryBuilder, String... indices) throws IOException {
+        Map<String, CountResponse> countRequestMap = new HashMap<>();
+        for (String index : indices) {
+            CountResponse countResponse;
+            if (index.contains("_")) {
+                countResponse = client.count(searchCount(queryBuilder, index.split("_")), RequestOptions.DEFAULT);
+            } else {
+                countResponse = client.count(searchCount(queryBuilder, index), RequestOptions.DEFAULT);
+            }
+            countRequestMap.put(index, countResponse);
+
+
+        }
+        return countRequestMap;
     }
 
 

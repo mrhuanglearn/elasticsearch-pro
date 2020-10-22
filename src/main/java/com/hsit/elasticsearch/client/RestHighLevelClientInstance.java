@@ -1,7 +1,6 @@
 package com.hsit.elasticsearch.client;
 
 
-
 import com.hsit.elasticsearch.abstracts.ElasticsearchClientAbstract;
 import com.hsit.elasticsearch.aops.CGlibProxyFactory;
 import org.apache.http.HttpHost;
@@ -86,12 +85,12 @@ public class RestHighLevelClientInstance extends ElasticsearchClientAbstract {
     public RestHighLevelClient getRestHighLevelClient(HttpHost... hosts) {
         RestHighLevelClientInstance cGlibProxyFactory = CGlibProxyFactory.getInstance().getProxy(RestHighLevelClientInstance.class);
         if (restHighLevelClient == null) {
-            getSingleRestClientBuilder(hosts);
+            RestClientBuilder restClientBuilder1=  cGlibProxyFactory.getSingleRestClientBuilder(hosts);
             cGlibProxyFactory.setConnectTimeOutConfig(new ConnectConfig());
             cGlibProxyFactory.setMultipleConnectConfig(new MaxConnConfig());
             synchronized (RestHighLevelClient.class) {
                 if (restHighLevelClient == null) {
-                    restHighLevelClient = new RestHighLevelClient(restClientBuilder);
+                    restHighLevelClient = new RestHighLevelClient(restClientBuilder1);
                 }
             }
         }
@@ -120,7 +119,7 @@ public class RestHighLevelClientInstance extends ElasticsearchClientAbstract {
         return restClientBuilder;
     }
 
-    public  class ConnectConfig {
+    public class ConnectConfig {
         int connectTimout = 30000;
         int socketTimeout = 30000;
         int connectionRequestTimeout = 30000;
@@ -136,7 +135,7 @@ public class RestHighLevelClientInstance extends ElasticsearchClientAbstract {
 
     }
 
-    public  class MaxConnConfig {
+    public class MaxConnConfig {
         int maxConnTotal = 16;
         int maxConnPerRoute = 16;
 

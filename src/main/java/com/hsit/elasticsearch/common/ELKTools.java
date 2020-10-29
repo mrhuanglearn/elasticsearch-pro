@@ -51,7 +51,7 @@ public class ELKTools {
             if (!result.contains(str))
                 result.add(str);
         }
-        return (String[]) result.toArray();
+        return result.toArray(new String[0]);
     }
 
 }
